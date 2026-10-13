@@ -15,7 +15,7 @@ import pandas as pd
 import streamlit as st
 
 DB = "reflections.db"
-TAGS = ["발문", "모둠활동", "시간배분", "자료", "학생반응", "평가", "수업목표"]
+TAGS = ["적극적으로 참여하기", "발표하기", "경청하기", "집중하기"]
 MOODS = {"😀": 4, "🙂": 3, "😐": 2, "😕": 1}
 
 
@@ -55,11 +55,11 @@ def stats_summary(df: pd.DataFrame, month: str) -> str:
         f"- 기록 횟수: {len(df)}회",
         f"- 학급별: {by_class}",
         f"- 평균 만족도: {mood:.2f} / 4",
-        f"- 자주 나온 태그 TOP3: {top}",
+        f"- 다음 수업 때 개선할 점 TOP3: {top}",
         "", "### 인상 깊은 한 마디",
         *[f"- {q}" for q in quotes],
-        "", "### 다음 달 실천 후보",
-        *([f"- {x}" for x in nxt] or ["- (기록된 '바꿀 점' 없음)"]),
+        "", "### 오늘 수업에서 잘한 점",
+        *([f"- {x}" for x in nxt] or ["- (기록된 '잘한 점' 없음)"]),
     ]
     return "\n".join(lines)
 
@@ -72,13 +72,13 @@ def gemini_summary(df: pd.DataFrame, month: str) -> str:
     genai.configure(api_key=key)
     model = genai.GenerativeModel(secret("GEMINI_MODEL", "gemini-2.0-flash"))
     rows = "\n".join(
-        f"[{r.ts[:10]}] {r.class_name} {r.unit} | {r.text} | 태그:{r.tags} | 바꿀 점:{r.next_change}"
+        f"[{r.ts[:10]}] {r.class_name} {r.unit} | {r.text} | 개선할 점:{r.tags} | 잘한 점:{r.next_change}"
         for r in df.itertuples())
     prompt = f"""당신은 고등학교 국어 교사의 수업 성찰을 정리하는 조력자입니다.
 아래는 {month}의 성찰 기록입니다. 규칙: 원문에 없는 내용을 지어내지 말 것,
 교사의 어투를 존중할 것, 근거 기록 날짜를 병기할 것.
 출력(마크다운): 1) 이번 달 한눈에 보기 2) 잘된 점 3) 아쉬운 점
-4) 반복된 고민 키워드 5) 다음 달 실천 제안 1~2개 6) 인상 깊은 한 마디 3개(원문 인용)
+4) 반복된 개선할 점 키워드 5) 다음 달 실천 제안 1~2개(개선할 점 근거) 6) 인상 깊은 한 마디 3개(원문 인용)
 
 {rows}"""
     try:
@@ -117,11 +117,11 @@ with tab1:
     with st.form("f", clear_on_submit=True):
         c1, c2 = st.columns(2)
         cls = c1.text_input("학년반", st.session_state.get("last_cls", ""), placeholder="2-3")
-        unit = c2.text_input("단원/차시", st.session_state.get("last_unit", ""))
+        unit = c2.text_input("단원/학습지 번호", st.session_state.get("last_unit", ""))
         text = st.text_area("한 마디 성찰 (140자)", max_chars=140, height=100)
         mood = st.radio("수업 만족도", list(MOODS), horizontal=True, index=1)
-        tags = st.multiselect("태그", TAGS)
-        nxt = st.text_input("다음 수업에 바꿀 점 (선택)")
+        tags = st.multiselect("다음 수업 때 개선할 점", TAGS)
+        nxt = st.text_input("오늘 수업에서 잘한 점 (선택)")
         ok = st.form_submit_button("저장", use_container_width=True)
     if ok:
         if not text.strip():
