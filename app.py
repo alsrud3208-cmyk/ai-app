@@ -15,8 +15,8 @@ import pandas as pd
 import streamlit as st
 
 DB = "reflections.db"
-TAGS = ["적극적으로 참여하기", "발표하기", "경청하기", "집중하기", "기타 다른 노력들을 할 거예요"]
-MOODS = {"😀: 최고예요": 4, "🙂: 좋아요": 3, "😐: 아쉬웠어요": 2, "😕: 힘들었어요": 1}
+TAGS = ["적극적으로 참여하기", "발표하기", "경청하기", "집중하기", "기타 다른 노력을 할 거예요"]
+MOODS = {"😀:최고예요": 4, "🙂:좋아요": 3, "😐:괜찮아요": 2, "😕:힘들어요": 1}
 
 
 def conn():
@@ -53,7 +53,7 @@ def stats_summary(df: pd.DataFrame, month: str) -> str:
     lines = [
         f"## {month} 수업 성찰 정리",
         f"- 기록 횟수: {len(df)}회",
-        f"- 학급별: {by_class}",
+        f"- 학생별 기록 수: {by_class}",
         f"- 평균 만족도: {mood:.2f} / 4",
         f"- 다음 수업 때 개선할 점 TOP3: {top}",
         "", "### 인상 깊은 한 마디",
@@ -113,10 +113,10 @@ st.title("📝 수업 성찰 한 마디")
 tab1, tab2, tab3 = st.tabs(["✍️ 기록하기", "📚 기록 보기", "📬 월간 정리"])
 
 with tab1:
-    st.caption("⚠️ 학생 실명·식별 정보는 쓰지 마세요.")
+    st.caption("⚠️ 학생 개인정보가 포함됩니다. 앱 비밀번호(APP_PASSWORD)를 꼭 설정하고 Private 저장소로 운영하세요.")
     with st.form("f", clear_on_submit=True):
         c1, c2 = st.columns(2)
-        cls = c1.text_input("학년반", st.session_state.get("last_cls", ""), placeholder="2-3")
+        cls = c1.text_input("학번 이름", st.session_state.get("last_cls", ""), placeholder="예: 10315 홍길동")
         unit = c2.text_input("단원/학습지 번호", st.session_state.get("last_unit", ""))
         text = st.text_area("한 마디 성찰 (140자)", max_chars=140, height=100)
         mood = st.radio("수업 만족도", list(MOODS), horizontal=True, index=1)
